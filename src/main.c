@@ -69,6 +69,23 @@ int main(void)
     GPIOA->CRL |= GPIO_CRL_MODE5_1;
     //enable push pull output and clock speed of 2MHz for Port A
 
+    RCC->APB2ENR |= RCC_APB2ENR_USART1EN_Msk;
+    //enable USART1 clock
+
+    GPIOA->CRH |= GPIO_CRH_MODE9_Msk;
+    GPIOA->CRH &= ~GPIO_CRH_CNF9_0;
+    GPIOA->CRH |= GPIO_CRH_CNF9_1;
+    // configure pin PA9 for TX; 50 MHz output mode, Alternate function output Push-pull
+
+    GPIOA->CRH &= ~GPIO_CRH_MODE10_Msk;
+    GPIOA->CRH &= ~GPIO_CRH_CNF10_Msk;
+    GPIOA->CRH |= GPIO_CRH_CNF10_0;
+    // configure PA10 for TX; input mode, floating input
+
+    USART1->BRR = 0x271;
+    // the USARTDIV value for a 115200 baud rate at a 72Mhz clock
+
+
     SysTick->LOAD=71999u; //count this number of clock cycles (equivallent to 1 ms)
     SysTick->VAL=0u;    // reset current value
     SysTick->CTRL |= SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_ENABLE_Msk | SysTick_CTRL_TICKINT_Msk;
