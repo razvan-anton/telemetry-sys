@@ -1,5 +1,13 @@
 #include "stm32f1xx.h"
 
+#define RX_BUF_SIZE 64 
+static volatile uint8_t rx_buffer[RX_BUF_SIZE];
+static volatile uint16_t rx_head;
+static volatile uint16_t rx_tail;
+
+static volatile uint16_t overflow_cnt;
+static volatile uint16_t error_cnt;
+
 volatile uint32_t system_ticks; // expressed in ms
 
 void SysTick_Handler()
@@ -21,10 +29,39 @@ void UART_Tx(uint8_t data)
     // after this write, TXE reg gets value 0. After data is moved to the shift register it is set.
 }
 
-// void USART2_IRQHandler()
-// {
-    
-// }
+void USART2_IRQHandler()
+{
+    uint32_t status = USART2->SR;
+    if(status & USART_SR_RXNE_Msk)
+    {
+        uint8_t byte = USART2->DR;
+        uint16_t next_head = (rx_head + 1) & (RX_BUF_SIZE - 1);
+        // bitwise & (N-1), when N is power of two, does mod N 
+
+        // we have to read DR first so that RXNE is cleared.
+        
+        if(next_head != rx_tail)
+        {
+            rx_buffer[next_head]=byte;
+            rx_head=next_head;
+        }
+        else
+        {
+            overflow_cnt++;
+        }
+    }    
+    if(status & USART_SR_ORE_Msk)
+    {
+        uint8_t byte = USART2->DR;
+        error_cnt++;
+        // if we are here, we had corrupted data
+        // This happens when data arrives in the DR reg faster than we process it.
+        // ( or in other words if we didn't process data fast enough due to other interrupts)
+        // when this happens this ISR is triggered and ORE is set and we ahve to clear it
+
+        // the read ORE + read DR sequence is how to clear the ORE bit
+    }
+}
 
 void SystemInit(void)
 {
@@ -99,9 +136,9 @@ int main(void)
     USART2->BRR = 0x138;
     // the USARTDIV value for a 115200 baud rate at a 36Mhz clock
 
-    // NVIC_SetPriority(USART2_IRQn,1);
-    // NVIC_EnableIRQ(USART2_IRQn);
-    // // enable interrupts and set priority
+    NVIC_SetPriority(USART2_IRQn,1);
+    NVIC_EnableIRQ(USART2_IRQn);
+    // enable interrupts and set priority
 
     USART2->CR1 |= USART_CR1_UE_Msk;
     // enable UART
@@ -125,17 +162,16 @@ int main(void)
             GPIOA->ODR ^= GPIO_ODR_ODR5;
             // toggle pin 5 ( PA5 is for the User LED )
 
-            UART_Tx('H');
-            UART_Tx('E');
-            UART_Tx('L');
-            UART_Tx('L');
-            UART_Tx('O');
-            UART_Tx('\r');
-            UART_Tx('\n');
-
-
             last_time+=500; // to force it every 500ms without any drifts
         }
+
+        if(rx_head!=rx_tail)
+        {
+            uint8_t byte_read = rx_buffer[rx_tail];
+            rx_tail = (rx_tail+1) & (RX_BUF_SIZE-1);
+            UART_Tx(byte_read);
+        }
+
 
 
     }
