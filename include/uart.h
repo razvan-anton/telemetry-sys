@@ -1,5 +1,5 @@
-#ifndef UART
-#define UART
+#ifndef UART_H
+#define UART_H
 
 #include "stm32f1xx.h"
 #include <stdbool.h>
