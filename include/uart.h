@@ -2,22 +2,23 @@
 #define UART
 
 #include "stm32f1xx.h"
+#include <stdbool.h>
+
 
 #define RX_BUF_SIZE 64 
-
-extern volatile uint8_t rx_buffer[RX_BUF_SIZE];
-extern volatile uint16_t rx_head;
-extern volatile uint16_t rx_tail;
-
-extern volatile uint16_t overflow_cnt;
-extern volatile uint16_t error_cnt;
-
-
 
 
 void USART2_IRQHandler();
 
-void UART_Tx(uint8_t data);
+void USART2_init();
+
+// Transmission (TX)
+void uart2_write_byte(uint8_t byte);
+void uart2_write_string(const char *str);
+
+// eception (RX - Non-blocking)
+bool uart2_rx_available(void);
+bool uart2_read_byte(uint8_t *out_byte);
 
 
 
