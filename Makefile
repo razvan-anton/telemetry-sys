@@ -19,7 +19,7 @@ LDFLAGS = $(MCU) -Tstm32f103rb.ld -Wl,--gc-sections \
           --specs=nano.specs -Wl,-Map=build/app.map
 
 # Sources
-SRCS    = src/main.c startup_stm32f103xb.s
+SRCS    = $(wildcard src/*.c) startup_stm32f103xb.s
 OBJS    = $(patsubst %.c, build/%.o, $(patsubst %.s, build/%.o, $(SRCS)))
 DEPS    = $(OBJS:.o=.d)
 
