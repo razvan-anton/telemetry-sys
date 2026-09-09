@@ -1,0 +1,23 @@
+# ESP-IDF
+**/build/
+**/sdkconfig.old
+**/dependencies.lock
+**/managed_components/
+
+# STM32 (CubeIDE / Make / CMake / Keil)
+**/Debug/
+**/Release/
+**/bin/
+**/*.elf
+**/*.bin
+**/*.hex
+**/*.map
+**/*.o
+**/*.d
+**/*.su
+
+# Editor / OS junk
+.vscode/
+.idea/
+*.DS_Store
+*.swp
