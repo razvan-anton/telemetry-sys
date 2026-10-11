@@ -5,13 +5,12 @@ static int error_cnt;
 int dropped_frames_cnt;
 static const char *TAG = "UART_TELEMETRY";
 
-void SendData(void)
+void SendData(void * arg)
 {
     mpu_data_t rx_data={};
-    int status=0;
     while(1)
     {
-        if(xQueueReceive(&telemetry_queue,&rx_data,0) == pdPASS)
+        if(xQueueReceive(telemetry_queue,&rx_data,portMAX_DELAY) == pdPASS)
         {
             // if item successfully received
             ESP_LOGI(TAG, "IMU [g] Accel: (%.2f, %.2f, %.2f) | Gyro [dps]: (%.2f, %.2f, %.2f) | Temp: %.1f C",
@@ -22,9 +21,8 @@ void SendData(void)
     }
 }
 
-void ReadData(void)
+void ReadData(void * arg)
 {
-    int status=0;
     int bytes_read=0;
     mpu_data_t tx_data={};
     while(1)
@@ -37,7 +35,7 @@ void ReadData(void)
         }
         else
         {
-            if( !xQueueSend(&telemetry_queue,&tx_data,0) == pdPASS)
+            if( !(xQueueSend(telemetry_queue,&tx_data,portMAX_DELAY) == pdPASS))
             {
                 dropped_frames_cnt++;
             }
@@ -45,6 +43,7 @@ void ReadData(void)
 
     }
 }
+
 
 void app_main(void)
 {
@@ -74,5 +73,4 @@ void app_main(void)
     assert(status == 1);
     status = xTaskCreatePinnedToCore(SendData, "task2_send", 4096, NULL, 5, NULL, 1);
     assert(status == 1);
-
 }
